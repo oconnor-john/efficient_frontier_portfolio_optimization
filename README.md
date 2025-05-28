@@ -1,0 +1,2 @@
+# efficient_frontier_portfolio_optimization
+Equity portfolio optimization using Efficient Frontier method
