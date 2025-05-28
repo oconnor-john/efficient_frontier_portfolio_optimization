@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Results</title>
+</head>
+<body>
+    <h2>Efficient Frontier</h2>
+    <img src="{{ image_path }}" alt="Efficient Frontier" width="600">
+
+    <h3>Trade Recommendations</h3>
+    <ul>
+        {% for rec in recs %}
+            <li>{{ rec }}</li>
+        {% endfor %}
+    </ul>
+
+    <br>
+    <a href="/">Analyze Another Portfolio</a>
+</body>
+</html>
