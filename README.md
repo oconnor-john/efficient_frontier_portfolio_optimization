@@ -2,9 +2,11 @@
 
 This Python tool loads your exported Yahoo Finance portfolio, fetches historical price data, runs a portfolio optimization using the efficient frontier, and generates **buy/sell trade recommendations in number of shares** to optimize your Sharpe ratio.
 
+Note: The provided portfolio.csv is for example use only.
+
 ---
 
-## 🚀 Features
+## Features
 
 - 📥 Load portfolio directly from a Yahoo Finance `.csv` export
 - 📈 Download historical adjusted price data using `yfinance`
@@ -15,7 +17,7 @@ This Python tool loads your exported Yahoo Finance portfolio, fetches historical
 
 ---
 
-## 📦 Requirements
+## Requirements
 
 Make sure you have Python 3.7+ installed, then run:
 
