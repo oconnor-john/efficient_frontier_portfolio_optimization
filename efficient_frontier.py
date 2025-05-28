@@ -96,14 +96,14 @@ def efficient_frontier_analysis(tickers, mean_returns, cov_matrix, current_weigh
 
 if __name__ == "__main__":
     try:
-        print("📥 Loading portfolio from Yahoo export (portfolio.csv)...")
+        print("Loading portfolio from Yahoo export (portfolio.csv)...")
         tickers, current_weights, latest_prices, portfolio_value = load_yahoo_portfolio("portfolio.csv")
 
-        print("📈 Fetching historical price data...")
+        print("Fetching historical price data...")
         price_data = get_data_yfinance(tickers, start='2023-01-01', end='2024-01-01')
         mean_returns, cov_matrix = get_returns_and_cov(price_data)
 
-        print("🚀 Running portfolio optimization and generating recommendations...")
+        print("Running portfolio optimization and generating recommendations...")
         efficient_frontier_analysis(tickers, mean_returns, cov_matrix, current_weights, latest_prices, portfolio_value)
 
     except Exception as e:
