@@ -75,7 +75,7 @@ def efficient_frontier_analysis(tickers, mean_returns, cov_matrix,
     max_sharpe_port = results_df.iloc[results_df['sharpe'].idxmax()]
     min_vol_port = results_df.iloc[results_df['stdev'].idxmin()]
 
-    # 🟧 Add benchmark (e.g., SPY) performance point
+    # Benchmark to SPY
     try:
         print(f"Fetching benchmark data: {benchmark_ticker}...")
         benchmark_raw = yf.download(benchmark_ticker, start='2023-01-01', end='2024-01-01', progress=False, auto_adjust=False)
@@ -90,13 +90,13 @@ def efficient_frontier_analysis(tickers, mean_returns, cov_matrix,
         benchmark_returns = benchmark_data.pct_change().dropna()
         bench_annual_return = benchmark_returns.mean() * 252
         bench_annual_vol = benchmark_returns.std() * np.sqrt(252)
-        
+
     except Exception as e:
         print("Failed to fetch benchmark:", e)
         bench_annual_return = None
         bench_annual_vol = None
 
-    # 📊 Plot efficient frontier and benchmark
+    # Plot efficient frontier and benchmark
     plt.figure(figsize=(10, 7))
     plt.scatter(results_df.stdev, results_df.ret, c=results_df.sharpe, cmap='viridis', alpha=0.7)
     plt.colorbar(label='Sharpe Ratio')
@@ -114,7 +114,7 @@ def efficient_frontier_analysis(tickers, mean_returns, cov_matrix,
     plt.tight_layout()
     plt.show()
 
-    # 💡 Generate trade recommendations
+    # Generate trade recommendations
     if current_weights is not None and prices is not None and portfolio_value is not None:
         optimized_weights = max_sharpe_port[tickers].values
         generate_trade_recommendations(current_weights, optimized_weights, tickers, prices, portfolio_value)
@@ -127,16 +127,16 @@ def efficient_frontier_analysis(tickers, mean_returns, cov_matrix,
 
 if __name__ == "__main__":
     try:
-        print("📥 Loading portfolio from Yahoo export (portfolio.csv)...")
+        print("Loading portfolio from Yahoo export (portfolio.csv)...")
         tickers, current_weights, latest_prices, portfolio_value = load_yahoo_portfolio("portfolio.csv")
 
-        print("📊 Fetching historical price data...")
+        print("Fetching historical price data...")
         price_data = get_data_yfinance(tickers, start='2023-01-01', end='2024-01-01')
         mean_returns, cov_matrix = get_returns_and_cov(price_data)
 
-        print("🚀 Running portfolio optimization and generating recommendations...")
+        print("Running portfolio optimization and generating recommendations...")
         efficient_frontier_analysis(tickers, mean_returns, cov_matrix, current_weights, latest_prices, portfolio_value)
 
     except Exception as e:
-        print("❌ ERROR:", e)
-        print("⚠️ Make sure 'portfolio.csv' is in the same folder and contains 'Symbol' and 'Quantity' columns.")
+        print("ERROR:", e)
+        print("Make sure 'portfolio.csv' is in the same folder and contains 'Symbol' and 'Quantity' columns.")
