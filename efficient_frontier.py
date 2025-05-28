@@ -5,7 +5,6 @@ import yfinance as yf
 
 def load_yahoo_portfolio(filepath="portfolio.csv"):
     df = pd.read_csv(filepath)
-
     df = df[df['Quantity'].notna()]
     df = df[df['Quantity'] > 0]
 
@@ -49,7 +48,10 @@ def generate_trade_recommendations(current_weights, optimized_weights, tickers, 
                 print(f"{action} {abs(share_change)} shares of {ticker}")
     print("--- End of Recommendations ---")
 
-def efficient_frontier_analysis(tickers, mean_returns, cov_matrix, current_weights=None, prices=None, portfolio_value=None, num_portfolios=10000):
+def efficient_frontier_analysis(tickers, mean_returns, cov_matrix,
+                                 current_weights=None, prices=None, portfolio_value=None,
+                                 num_portfolios=10000, benchmark_ticker='SPY'):
+
     results = np.zeros((3, num_portfolios))
     weights_record = []
 
@@ -73,17 +75,46 @@ def efficient_frontier_analysis(tickers, mean_returns, cov_matrix, current_weigh
     max_sharpe_port = results_df.iloc[results_df['sharpe'].idxmax()]
     min_vol_port = results_df.iloc[results_df['stdev'].idxmin()]
 
+    # 🟧 Add benchmark (e.g., SPY) performance point
+    try:
+        print(f"Fetching benchmark data: {benchmark_ticker}...")
+        benchmark_raw = yf.download(benchmark_ticker, start='2023-01-01', end='2024-01-01', progress=False, auto_adjust=False)
+
+        if 'Adj Close' in benchmark_raw.columns:
+            benchmark_data = benchmark_raw['Adj Close']
+        elif isinstance(benchmark_raw.columns, pd.MultiIndex):
+            benchmark_data = benchmark_raw.loc[:, pd.IndexSlice[:, 'Adj Close']].droplevel(1, axis=1).iloc[:, 0]
+        else:
+            raise ValueError("Could not find 'Adj Close' in benchmark data.")
+
+        benchmark_returns = benchmark_data.pct_change().dropna()
+        bench_annual_return = benchmark_returns.mean() * 252
+        bench_annual_vol = benchmark_returns.std() * np.sqrt(252)
+        
+    except Exception as e:
+        print("Failed to fetch benchmark:", e)
+        bench_annual_return = None
+        bench_annual_vol = None
+
+    # 📊 Plot efficient frontier and benchmark
     plt.figure(figsize=(10, 7))
-    plt.scatter(results_df.stdev, results_df.ret, c=results_df.sharpe, cmap='viridis')
+    plt.scatter(results_df.stdev, results_df.ret, c=results_df.sharpe, cmap='viridis', alpha=0.7)
     plt.colorbar(label='Sharpe Ratio')
-    plt.xlabel('Volatility (Std Deviation)')
-    plt.ylabel('Return')
-    plt.title('Efficient Frontier')
     plt.scatter(max_sharpe_port['stdev'], max_sharpe_port['ret'], c='red', marker='*', s=300, label='Max Sharpe')
     plt.scatter(min_vol_port['stdev'], min_vol_port['ret'], c='blue', marker='*', s=300, label='Min Volatility')
+
+    if bench_annual_return is not None and bench_annual_vol is not None:
+        plt.scatter(bench_annual_vol, bench_annual_return, c='orange', marker='X', s=200, label=f'Benchmark ({benchmark_ticker})')
+
+    plt.xlabel('Volatility (Std Deviation)')
+    plt.ylabel('Return')
+    plt.title('Efficient Frontier with Benchmark')
+    plt.grid(True)
     plt.legend()
+    plt.tight_layout()
     plt.show()
 
+    # 💡 Generate trade recommendations
     if current_weights is not None and prices is not None and portfolio_value is not None:
         optimized_weights = max_sharpe_port[tickers].values
         generate_trade_recommendations(current_weights, optimized_weights, tickers, prices, portfolio_value)
@@ -96,16 +127,16 @@ def efficient_frontier_analysis(tickers, mean_returns, cov_matrix, current_weigh
 
 if __name__ == "__main__":
     try:
-        print("Loading portfolio from Yahoo export (portfolio.csv)...")
+        print("📥 Loading portfolio from Yahoo export (portfolio.csv)...")
         tickers, current_weights, latest_prices, portfolio_value = load_yahoo_portfolio("portfolio.csv")
 
-        print("Fetching historical price data...")
+        print("📊 Fetching historical price data...")
         price_data = get_data_yfinance(tickers, start='2023-01-01', end='2024-01-01')
         mean_returns, cov_matrix = get_returns_and_cov(price_data)
 
-        print("Running portfolio optimization and generating recommendations...")
+        print("🚀 Running portfolio optimization and generating recommendations...")
         efficient_frontier_analysis(tickers, mean_returns, cov_matrix, current_weights, latest_prices, portfolio_value)
 
     except Exception as e:
-        print("ERROR:", e)
-        print("Make sure 'portfolio.csv' is in the same folder and contains 'Symbol' and 'Quantity' columns.")
+        print("❌ ERROR:", e)
+        print("⚠️ Make sure 'portfolio.csv' is in the same folder and contains 'Symbol' and 'Quantity' columns.")
